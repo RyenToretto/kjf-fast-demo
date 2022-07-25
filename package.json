@@ -1,0 +1,112 @@
+{
+  "name": "com.hnzht.lucky.novel",
+  "version": "1.0.0",
+  "description": "抖看小说",
+  "scripts": {
+    "start": "npm run server",
+    "server": "hap server --watch",
+    "watch": "hap watch",
+    "build": "hap build",
+    "release": "hap release",
+    "gen": "node ./command/gen/index.js",
+    "debug": "hap debug",
+    "commit": "git add . && git commit -m '✨ functional update' && git push",
+    "clean-commit": "git checkout --orphan latest_branch && git add -A && git commit -am '🎉 Initial commit' && git branch -D master && git branch -m master && git push -f origin master",
+    "precommit-msg": "echo '🚧 start pre-commit checks...' && exit 0",
+    "eslint:fix": "eslint src/**/**/*.js --fix",
+    "eslint:code": "eslint src/**/**/*.js",
+    "format:code": "prettier-eslint --write \"src/**/**/*.{js,ux,less,scss,css}\"",
+    "prettier": "node ./command/selfCloseInputTag.js && prettier --write \"src/**/*.{js,ux,qxml}\"",
+    "watcher": "onchange '**/*.md' \"src/**/**/*.{js,ux,less,scss,css}\" -- prettier --write {{changed}}"
+  },
+  "devDependencies": {
+    "@babel/runtime": "^7.12.13",
+    "@types/quickapp": "npm:quickapp-interface@^1.0.0",
+    "address": "^1.1.0",
+    "babel-loader": "^8.0.6",
+    "colors": "^1.3.3",
+    "eslint-config-prettier": "^6.1.0",
+    "eslint-plugin-prettier": "^3.1.0",
+    "husky": "^3.0.4",
+    "less": "^3.10.1",
+    "less-loader": "^5.0.0",
+    "lint-staged": "^9.2.3",
+    "onchange": "^6.0.0",
+    "opn": "^6.0.0",
+    "portfinder": "^1.0.23",
+    "prettier": "^1.18.2",
+    "prettier-plugin-ux": "0.3.0",
+    "webpack": "^5.24.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "yarn run precommit-msg && lint-staged"
+    }
+  },
+  "lint-staged": {
+    "**/**.{ux,js,json,pcss,md,vue,less,scss}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "semi": false,
+    "printWidth": 120,
+    "proseWrap": "never"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true,
+      "es6": true
+    },
+    "rules": {
+      "no-console": 0,
+      "no-useless-escape": 0,
+      "no-multiple-empty-lines": [
+        2,
+        {
+          "max": 3
+        }
+      ],
+      "prettier/prettier": [
+        "error",
+        {
+          "singleQuote": true,
+          "semi": false,
+          "trailingComma": "none",
+          "bracketSpacing": true,
+          "jsxBracketSameLine": true,
+          "insertPragma": true,
+          "requirePragma": false
+        }
+      ]
+    },
+    "plugins": [],
+    "extends": [
+      "plugin:prettier/recommended",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "ecmaVersion": 6,
+      "parser": "babel-eslint",
+      "sourceType": "module"
+    }
+  },
+  "eslintIgnore": [
+    "package.json",
+    "src/assets/js/*.js"
+  ],
+  "keywords": [
+    "抖看小说",
+    "抖看",
+    "小说"
+  ],
+  "dependencies": {
+    "md5": "^2.3.0"
+  },
+  "browserslist": [
+    "chrome 65"
+  ]
+}

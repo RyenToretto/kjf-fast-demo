@@ -1,0 +1,28 @@
+<script>
+/**
+ * @desc: 引入{轻粒子快应用统计}代码
+ */
+import './assets/js/appStatistics.min.js'
+import { $utils, $apis } from './helper'
+
+/* @desc: 注入方法至全局 global, 以便页面调用 */
+const hook2global = global.__proto__ || global
+hook2global.$apis = $apis
+hook2global.$utils = $utils
+
+console.log(`当前 Version 是 :`, VERSION)
+console.log(`当前 Version Name 是 :`, VERSION_NAME)
+console.log(`当前 Version Code 是 :`, VERSION_CODE)
+
+/* 注入 runtime/regenerator，以增加对 async/await 的支持 */
+hook2global.regeneratorRuntime = require('@babel/runtime/regenerator')
+
+export default {
+  $apis: $apis,
+  createShortcut: $utils.createShortcut,
+  // 此处的 async 只在于用法的一种示范，无实际意义；
+  async onCreate() {
+    APP_STATISTICS.app_sta_init(this)
+  }
+}
+</script>
