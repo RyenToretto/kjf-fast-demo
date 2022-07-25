@@ -1,0 +1,167 @@
+<template>
+  <div class="rewarded-ad"></div>
+</template>
+
+<style lang="less">
+  .rewarded-ad {
+  }
+</style>
+
+<script>
+  import ad from "@service.ad";
+  import prompt from "@system.prompt";
+
+  let rewardedVideoAd;
+  export default {
+    props: {
+      isFast: {
+        type: Boolean,
+        default() {
+          return false
+        }
+      }
+    },
+    data: {
+      provider: "",
+      errStr: "",
+      adPoor: [],
+      adType: '',
+      isAdReady: false,
+      autoShow: false,
+      isLoading: false
+    },
+    getReady(loadIfNot = false) {
+      if (loadIfNot) {
+        this.loadRewardAd();
+      }
+      return this.isAdReady;
+    },
+    reLoadPoor() {
+      const { poorAd, utils } = this.$app.$def;
+      const { poorAdMap, AD_TYPE_REWARD, TEST_AD_MAP, isDev } = poorAd;
+      const poorArr = poorAdMap[AD_TYPE_REWARD];
+      this.adType = AD_TYPE_REWARD;
+      this.adPoor = isDev
+        ? utils.deepClone(TEST_AD_MAP[AD_TYPE_REWARD])
+        : utils.deepClone(this.isFast ? poorArr.slice(-4) : poorArr);
+    },
+    loadRewardAd(showAfterLoad = false, isSelf = false) {
+      !isSelf && console.log(`====== 激励视频 自动展示(${showAfterLoad}) l o a d =====> `);
+      this.provider = ad.getProvider();
+      if (this.provider !== "huawei") {
+        prompt.showToast({
+          message: "当前设备不支持华为广告功能。",
+          duration: 2000,
+          gravity: "center"
+        });
+        this.isLoading = false;
+        return;
+      }
+      if (rewardedVideoAd) {
+        rewardedVideoAd.destroy();
+        rewardedVideoAd = null
+        this.autoShow = false;
+      }
+      this.isAdReady = false;
+      const { poorAd } = this.$app.$def;
+      const adInfo = poorAd.getAdId(this.adPoor, this.adType);
+      rewardedVideoAd = ad.createRewardedVideoAd({
+        adUnitId: adInfo.adUnitId
+      });
+      rewardedVideoAd.onLoad(() => {
+        console.log('激励视频广告 拉取成功!!!');
+        this.errStr = "";
+        this.reLoadPoor();
+        this.isAdReady = true;
+        this.isLoading = false;
+
+        this.$emit('ok', { msg: 'reward ad ok', realOk: true });
+        try {
+          const { poorAd } = this.$app.$def;
+          poorAd.arpuXHReport(this.adPoor);
+        } catch (e) {
+          console.log('ins ad arpu XHReport error: ', e);
+        }
+        if (showAfterLoad || this.autoShow) {
+          rewardedVideoAd.show();
+          try {
+            const { poorAd } = this.$app.$def;
+            poorAd.adXHReport();
+          } catch (e) {
+            console.log('reward ad adXHReport error: ', e);
+          }
+        }
+      });
+      rewardedVideoAd.onError(e => {
+        rewardedVideoAd.destroy();
+        rewardedVideoAd = null;
+        this.isAdReady = false;
+        (+e.errCode !== 1004) && console.error("激励视频广告 加载异常 error:" + JSON.stringify(e, null, 4));
+
+        this.errStr = JSON.stringify(e);
+
+        const { poorAd } = this.$app.$def;
+        const shouldContinue = poorAd.dealAdIdErr(this.adPoor, this.adType);
+        !poorAd.isDev && shouldContinue && this.loadRewardAd(showAfterLoad, true);
+        (poorAd.isDev || !shouldContinue) && this.$emit('ok', { msg: 'ins ad ok', realOk: false });
+        if (!shouldContinue) {
+          console.log('==== 激励视频广告 拉取失败 ====>\n\n');
+          this.reLoadPoor();
+          this.autoShow = false;
+          this.isLoading = false;
+          this.$emit('close', { msg: 'reward ad onClose' });
+          // this.loadRewardAd(); // 0价 不再重新尝试
+        }
+      });
+      rewardedVideoAd.onClose(res => {
+        if (res.isEnded) {
+          this.$emit('success', { msg: 'success Unlock By Video' });
+        }
+        console.log(`激励视频广告 已关闭`);
+        rewardedVideoAd.destroy();
+        rewardedVideoAd = null;
+        this.isAdReady = false;
+        this.reLoadPoor();
+        this.autoShow = false;
+        this.isLoading = false;
+        this.$emit('close', { msg: 'ins ad onClose' });
+        this.loadRewardAd();
+      });
+      rewardedVideoAd.load();
+    },
+    onReady(options) {
+      this.reLoadPoor();
+    },
+    onDestroy() {
+      if (rewardedVideoAd) {
+        rewardedVideoAd.destroy();
+        rewardedVideoAd = null;
+        this.isAdReady = false;
+        this.autoShow = false;
+      }
+    },
+    show: function () {
+      if (this.isLoading) {
+        prompt.showToast({
+          message: '请稍等~广告数据拉取中',
+          duration: 2000,
+          gravity: 'center'
+        });
+        return
+      }
+      this.isLoading = true;
+
+      if (rewardedVideoAd && rewardedVideoAd.show) {
+        this.autoShow = true;
+        if (this.isAdReady) {
+          rewardedVideoAd.show();
+          const { poorAd } = this.$app.$def;
+          poorAd.adXHReport();
+        }
+      } else {
+        this.reLoadPoor();
+        this.loadRewardAd(true);
+      }
+    },
+  };
+</script>

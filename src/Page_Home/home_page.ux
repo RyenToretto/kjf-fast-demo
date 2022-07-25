@@ -1,0 +1,100 @@
+<template>
+  <div class="home-page">
+    <div class="do-line">
+      <text>{{ title }}</text>
+    </div>
+
+    <div class="do-photo-line home-content">
+      <image src="{{ icon }}"></image>
+    </div>
+
+    <div class="do-line colored" @click="toPage">
+      <text class="do-tips">测试</text>
+    </div>
+
+    <div class="do-photo-line">
+      <div class="do-photo">
+        <image src="{{ '/Common/img/about.svg' }}"></image>
+      </div>
+
+      <div class="do-photo">
+        <image src="{{ '/Common/img/home.svg' }}"></image>
+      </div>
+
+      <div class="do-photo">
+        <image src="{{ '/Common/img/like.png' }}"></image>
+      </div>
+
+      <div class="do-photo">
+        <image src="{{ '/Common/img/main.svg' }}"></image>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import router from '@system.router';
+import app from '@system.app';
+
+const appInfo = app.getInfo()
+
+export default {
+  public: {
+    title: appInfo.name,
+    icon: appInfo.icon
+  },
+
+  onInit() { },
+
+  onReady() { },
+
+  onShow() {
+    APP_STATISTICS.page_show(this)
+  },
+
+  onHide() {
+    APP_STATISTICS.page_hide(this)
+  },
+
+  toPage() {
+    router.push({ uri: '/Page_About' });
+  }
+}
+</script>
+
+<style lang="less">
+@import "../Common/css/variable.less";
+
+.home-page {
+  width: 100%;
+  flex-direction: column;
+  .do-line {
+    padding: 12px 0;
+    background-color: #f1f1f1;
+    justify-content: center;
+    align-items: center;
+    .do-tips {
+      font-size: 32px;
+    }
+  }
+  .colored {
+    background-color: #dadada;
+  }
+  .do-photo-line {
+    padding: 12px 0;
+    justify-content: space-around;
+    align-items: center;
+    .do-photo {
+      padding: 12px 0;
+      image {
+        height: 60px;
+      }
+    }
+  }
+  .home-content {
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+</style>

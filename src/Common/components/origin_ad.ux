@@ -1,0 +1,367 @@
+<template>
+  <div class="origin-ad" style="padding-left: {{padding}}px; padding-right: {{padding}}px;">
+    <div if="native.isShow" class="origin-ad-box">
+      <div class="origin-ad-header" style="justify-content: {{ mode === 'card' ? 'space-between' : 'flex-end' }};">
+        <div if="{{ mode === 'card' }}" class="origin-ad-title">
+          <text>{{ native.adData.title }}</text>
+          <input if="native.isShowBtn" type="button" class="adbtn" value="{{native.btnTxt}}" onclick="clickAdBtn" />
+        </div>
+
+        <div class="closeImg">
+          <image src="/Common/close.png" onclick="closeAd"></image>
+        </div>
+      </div>
+
+      <video id="video" if="native.isShowVideo" src="{{native.adVideoSrc}}" autoplay="true" onclick="reportNativeClick" class="ad-video"></video>
+
+      <stack class="origin-ad-stack" onclick="reportNativeClick">
+        <image if="native.isShowImg && !native.isShowVideo" class="img" src="{{native.adImgSrc}}"></image>
+      </stack>
+
+      <div if="{{ mode === 'page' }}" class="origin-ad-bottom">
+        <div class="origin-ad-title">
+          <text>{{ native.adData.title }}</text>
+          <div class="ad-btn-box">
+            <input if="native.isShowBtn" type="button" class="adbtn" value="{{native.btnTxt}}" onclick="clickAdBtn" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <text if="native.errStr"></text>
+  </div>
+</template>
+
+<style lang="less">
+  .origin-ad {
+    padding: 24px 20px 0;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    align-content: center;
+    .img {
+      width: 100%;
+      border-radius: 12px;
+      resize-mode: contain;
+    }
+    .origin-ad-box {
+      flex-direction: column;
+      width: 100%;
+      .origin-ad-title {
+        align-items: center;
+        text {
+          line-height: 42px;
+          font-size: 32px;
+          color: #404447;
+        }
+      }
+      .adbtn {
+        margin: 0 0 0 8px;
+        padding: 0 12px;
+        height: 40px;
+        border-radius: 8px;
+        background-color: #00bfff;
+        color: #ffffff;
+        font-size: 22px;
+      }
+      .adbtn:active {
+        background-color: #058fbd;
+      }
+      .origin-ad-header {
+        padding-bottom: 8px;
+        justify-content: flex-end;
+        align-items: center;
+        .closeImg {
+          width: 26px;
+          height: 26px;
+          flex-shrink: 0;
+        }
+      }
+      .ad-video {
+        width: 100%;
+      }
+      .origin-ad-stack {
+        width: 100%;
+      }
+      .origin-ad-bottom {
+        padding-bottom: 8px;
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        .origin-ad-title {
+          padding-top: 24px;
+          width: 100%;
+          flex-direction: column;
+          align-items: flex-start;
+          text {
+            line-height: 46px;
+            font-size: 32px;
+          }
+          .ad-btn-box {
+            padding-top: 24px;
+            padding-right: 8px;
+            width: 100%;
+            justify-content: center;
+            align-items: center;
+            .adbtn {
+              padding: 11px 30px;
+              width: 260px;
+              height: 65px;
+              border-radius: 44px;
+              background-color: #00bfff;
+              color: #ffffff;
+              line-height: 43px;
+              font-size: 26px;
+            }
+            .adbtn:active {
+              background-color: #058fbd;
+            }
+          }
+        }
+      }
+    }
+  }
+</style>
+
+<script>
+  import ad from "@service.ad";
+
+  let nativeAd;
+  export default {
+    props: {
+      padding: {
+        type: [String, Number],
+        default() {
+          return 20
+        }
+      },
+      auto: {
+        type: Boolean,
+        default() {
+          return true
+        }
+      },
+      mode: {
+        type: String,
+        default() {
+          return 'card'
+        }
+      }
+    },
+    data: {
+      componentName: "ad",
+      provider: "",
+      native: {
+        isShow: false,
+        adData: {},
+        isShowImg: true,
+        isShowVideo: true,
+        isShowBtn: true,
+        errStr: "",
+        btnTxt: "",
+        adImgSrc: "",
+        adVideoSrc: ""
+      },
+      adPoor: [],
+      adType: '',
+      isLoad: false
+    },
+    reLoadPoor() {
+      const { poorAd, utils } = this.$app.$def;
+      const { poorAdMap, AD_TYPE_ORIGIN, TEST_AD_MAP, isDev } = poorAd;
+      this.adType = AD_TYPE_ORIGIN;
+      this.adPoor = isDev
+        ? utils.deepClone(TEST_AD_MAP[AD_TYPE_ORIGIN])
+        : utils.deepClone(poorAdMap[AD_TYPE_ORIGIN]);
+    },
+    nativeOnLoad(data) {
+      this.native.adData = data.adList[0];
+      if (this.native.adData) {
+        if (this.native.adData.imgUrlList) {
+          this.native.adImgSrc = this.native.adData.imgUrlList[0];
+          this.native.isShowImg = true;
+        } else {
+          this.native.isShowImg = false;
+          this.native.adImgSrc = "";
+        }
+        if (this.native.adData.clickBtnTxt) {
+          this.native.btnTxt = this.native.adData.clickBtnTxt;
+          this.native.isShowBtn = true;
+        } else {
+          this.native.isShowBtn = false;
+          this.native.btnTxt = "";
+        }
+        if (this.native.adData.videoUrlList && this.native.adData.videoUrlList[0]) {
+          this.native.adVideoSrc = this.native.adData.videoUrlList[0];
+          this.native.isShowVideo = true;
+        } else {
+          this.native.isShowVideo = false;
+          this.native.adVideoSrc = "";
+        }
+        this.native.errStr = "";
+        !this.isLoad && this.$emit('load', { msg: 'origin ad load' });
+        this.isLoad = true;
+        this.reLoadPoor();
+        console.log(`${this.native.isShowImg} - ${this.native.adImgSrc} - 原生广告加载成功！！！`);
+        try {
+          const { poorAd } = this.$app.$def;
+          poorAd.arpuXHReport(this.adPoor);
+        } catch (e) {
+          console.log('ins ad arpu XHReport error: ', e);
+        }
+        if (this.auto) {
+          this.native.isShow = true;
+          this.reportNativeShow();
+        }
+      }
+    },
+    show() {
+      if (this.isLoad && !this.native.isShow) {
+        this.native.isShow = true;
+        this.reportNativeShow();
+      }
+    },
+    nativeOnError(e) {
+      (+e.errCode !== 1004) && console.log(`${false} - 原生广告加载失败 Error: ${JSON.stringify(e, null, 4)}`);
+      this.isLoad = false;
+      this.native.isShowImg = false;
+      this.native.isShowVideo = false;
+      this.native.isShow = false;
+      this.native.errStr = JSON.stringify(e);
+
+      const { poorAd } = this.$app.$def;
+      const shouldContinue = poorAd.dealAdIdErr(this.adPoor, this.adType);
+      !poorAd.isDev && shouldContinue && this.showNativeAd(true);
+    },
+    showNativeAd(isSelf = false) {
+      this.provider = ad.getProvider();
+      if (this.provider !== "huawei") {
+        return;
+      }
+      const { poorAd } = this.$app.$def;
+      const adInfo = poorAd.getAdId(this.adPoor, this.adType);
+      this.isLoad = false;
+      nativeAd = ad.createNativeAd({ adUnitId: adInfo.adUnitId });
+      nativeAd.onLoad(this.nativeOnLoad.bind(this));
+      nativeAd.onError(this.nativeOnError.bind(this));
+      nativeAd.load();
+    },
+    report() { // 切到桌面再返回、进入落地页后返回
+      if (this.native.isShow) {
+        this.reportNativeShow();
+      }
+    },
+    closeAd: function (evt) {
+      try {
+        evt && evt.stopPropagation && evt.stopPropagation();
+      } catch (e) {
+      }
+      this.isLoad = false;
+      this.native.isShow = false;
+      this.$emit('close', { msg: 'close origin ad' })
+    },
+    onInit() {
+    },
+    onReady(options) {
+      this.reLoadPoor();
+      this.showNativeAd();
+    },
+    onShow(options) {
+      this.report();
+    },
+    onDestroy() {
+      this.isLoad = false;
+      if (nativeAd) {
+        nativeAd.cancelDownload({
+          adId: this.native.adData.adId
+        });
+        nativeAd.destroy();
+      }
+    },
+    isDownloadAd(creativeType) {
+      let downloadTypes = [103, 106, 107, 108, 101, 102, 110];
+      return downloadTypes.includes(creativeType);
+    },
+    reportNativeShow() {
+      if (nativeAd) {
+        nativeAd.reportAdShow({ adId: this.native.adData.adId });
+        const { poorAd } = this.$app.$def;
+        poorAd.adXHReport();
+      }
+    },
+    reportNativeClick(evt) {
+      try {
+        evt && evt.stopPropagation && evt.stopPropagation();
+      } catch (e) {
+      }
+      nativeAd.reportAdClick({
+        adId: this.native.adData.adId
+      });
+    },
+    listenNativeAdDownloadStatus(downloadstatus) {
+      if (downloadstatus === "INSTALLED") {
+        this.native.btnTxt = "OPEN";
+      }
+    },
+    clickAdBtn(evt) {
+      try {
+        evt && evt.stopPropagation && evt.stopPropagation();
+      } catch (e) {
+      }
+      // 判断是否带下载按钮
+      let createType = this.native.adData.creativeType;
+      let ans = this.isDownloadAd(createType);
+      if (ans) {
+        this.dealdownload();
+      } else {
+        this.reportNativeClick();
+      }
+    },
+    dealdownload: function () {
+      let downloadstatus = nativeAd.getAppStatus({
+        adId: this.native.adData.adId
+      });
+      if (downloadstatus === "DOWNLOAD") {
+        //下载未开始，应用初始状态。
+        const resultCode = nativeAd.startDownload({
+          adId: this.native.adData.adId
+        });
+        console.info("开始下载  resultCode= " + resultCode);
+        const progress = nativeAd.getDownloadProgress({
+          adId: this.native.adData.adId
+        });
+        console.info("下载进度 progress = " + progress);
+        nativeAd.onDownloadProgress(data => {
+          console.info("下载中 data = ", data);
+          this.native.btnTxt = data.progress + "%";
+        });
+        nativeAd.onStatusChanged(data => {
+          console.info("广告状态变更 data = ", data);
+          let status = data.status;
+          this.listenNativeAdDownloadStatus(status);
+        });
+      } else if (downloadstatus === "DOWNLOADING") {
+        this.native.btnTxt = "pause";
+        nativeAd.pauseDownload({
+          adId: this.native.adData.adId
+        });
+      } else if (downloadstatus === "PAUSE") {
+        this.native.btnTxt = "resume download";
+        nativeAd.resumeDownload({
+          adId: this.native.adData.adId
+        });
+      } else {
+        this.reportNativeClick();
+      }
+    },
+    removeAdListen: function () {
+      if (nativeAd) {
+        nativeAd.offDownloadProgress();
+        nativeAd.offError((e) => {
+        });
+        nativeAd.offLoad((e) => {
+        });
+        nativeAd.offStatusChanged();
+      }
+    }
+  };
+</script>

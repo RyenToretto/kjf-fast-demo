@@ -87,7 +87,7 @@ exports.startBrowserProcess = url => {
       })
       return true
     } catch (err) {
-      console.log(`${chalk.red('✘')} Opps, Something Error：\n`, err)
+      console.log(`${chalk.red('✘')} Opps, Something Error: \n`, err)
     }
   }
 

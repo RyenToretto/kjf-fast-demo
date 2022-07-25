@@ -1,28 +1,164 @@
 <script>
-/**
- * @desc: 引入{轻粒子快应用统计}代码
- */
-import './assets/js/appStatistics.min.js'
-import { $utils, $apis } from './helper'
+  import regeneratorRuntime from "@babel/runtime/regenerator";
+  import ad from "@service.ad";
+  import storage from '@system.storage';
+  import PubSub from './Common/js/pubSub.js';
+  import rootStore from './Common/js/rootStore.js';
+  import http from './Common/js/http.js';
+  import utils from './Common/js/utils.js';
+  import doLogin from './Common/js/doLogin.js';
+  import poorAd from './Common/js/poorAd.js';
+  import deskIcon from './Common/js/deskIcon.js';
 
-/* @desc: 注入方法至全局 global, 以便页面调用 */
-const hook2global = global.__proto__ || global
-hook2global.$apis = $apis
-hook2global.$utils = $utils
+  // 快应用官方: 轻粒子数据统计 http://developer.quickingdata.com/doc/developing/application/q_app.html
+  import './Common/js/qinglizi/appStatistics.min.js';
 
-console.log(`当前 Version 是 :`, VERSION)
-console.log(`当前 Version Name 是 :`, VERSION_NAME)
-console.log(`当前 Version Code 是 :`, VERSION_CODE)
+  try {
+    /* @desc: 注入方法至全局 global, 以便页面调用 */
+    const hook2global = global.__proto__ || global;
+    hook2global.$utils = utils;
 
-/* 注入 runtime/regenerator，以增加对 async/await 的支持 */
-hook2global.regeneratorRuntime = require('@babel/runtime/regenerator')
-
-export default {
-  $apis: $apis,
-  createShortcut: $utils.createShortcut,
-  // 此处的 async 只在于用法的一种示范，无实际意义；
-  async onCreate() {
-    APP_STATISTICS.app_sta_init(this)
+    /* 注入 runtime/regenerator，以增加对 async/await 的支持 */
+    hook2global.regeneratorRuntime = regeneratorRuntime;
+  } catch (e) {
   }
-}
+
+  module.exports = {
+    rootStore,
+    utils,
+    doLogin,
+    deskIcon,
+    http,
+    linkProtocol: 'https://xmall-res.xdplt.com/static/quickbrowser/user_agreement.html',
+    linkPrivacy: 'https://xmall-res.xdplt.com/static/quickbrowser/privacy-policy.html',
+    pubSub: PubSub,
+    userInfo: {},
+    initDone: false,
+    adPureStick: '',
+    provider: '',
+    deviceInfo: {
+    },
+    poorAd,
+    isFirstOpen: true,
+    openCustomAd: true,
+    isIBU: false,
+    isInCityBlackList: false,
+    farFromFirstStart: false,
+    sKey: '',
+    getAdPure() {
+      if (this.$def.adPureStick === '') {
+        return false;
+      }
+      return this.$def.adPureStick < Date.now();
+    },
+    appSubscribe() {
+      return new Promise(async (resolve) => {
+        await PubSub.subscribe(rootStore.SET_AD_CUSTOM, (msg) => {
+          this.$def.openCustomAd = !this.$def.openCustomAd;
+        });
+        await PubSub.subscribe(rootStore.SET_AD_PURE, (msg) => {
+          this.$def.adPureStick = Date.now() + 1000 * 60 * 15;
+        });
+        await PubSub.subscribe(rootStore.FIRST_OPEN, (msg) => {
+          this.$def.isFirstOpen = false;
+        });
+        await PubSub.subscribe(rootStore.UPDATE_USER_INFO, (msg, { userInfo }) => {
+          this.$def.userInfo = userInfo
+        });
+        resolve();
+      })
+    },
+    async getDeviceInfo() {
+      const { deviceInfo } = await rootStore.setGlbParams();
+      this.$def.deviceInfo = deviceInfo;
+      try {
+        const dayLimit = 1000 * 60 * 60 * 24;
+        const { pkg } = rootStore.getGlbParams();
+        this.sKey = pkg.replace(/\./ig, '_');
+        const ibu = await utils.promiseFactory(storage.get, { key: `${this.sKey}_is_ibu` });
+        if (+ibu === 1) {
+          this.isIBU = true;
+          rootStore.setIbuParams(this.isIBU, this.isInCityBlackList)
+        }
+        const firstStart = await utils.promiseFactory(storage.get, { key: this.sKey });
+        if (firstStart) {
+          this.farFromFirstStart = (Date.now() - firstStart) > dayLimit;
+        } else {
+          utils.promiseFactory(storage.set, { key: this.sKey, value: Date.now() });
+        }
+      } catch (e) {
+        console.log('far From First Start error: ', e);
+      }
+    },
+    async getAccessToken() {
+      const accessToken = await utils.promiseFactory(storage.get, { key: 'access_token' });
+      if (accessToken) {
+        await rootStore.setGlbHeader({ accessToken });
+        await doLogin.requestUserInfo();
+      } else {
+        await doLogin.markAppLogin();
+      }
+    },
+    questionIBU() {
+      http.xhIBU('http://xh.xdplt.com/ibu')
+        .then(res => {
+          if (res && res.data && +res.data.ret === 200 && res.data.data) {
+            const { result } = res.data.data;
+            this.isIBU = +result === 1;
+            if (this.isIBU) {
+              utils.promiseFactory(storage.set, { key: `${this.sKey}_is_ibu`, value: 1 });
+              http.xhReport('https://xe.xdplt.com/adtrack', 'xh_is_ibu', {});
+              rootStore.setIbuParams(this.isIBU, this.isInCityBlackList)
+              return
+            }
+            if (!this.isIBU && res.retryCount < 61) {
+              setTimeout(() => this.questionIBU(), 5000)
+            }
+          }
+        })
+        .catch(e => console.log(`IBU request error: ${e}`));
+    },
+    async queryIp() {
+      http.get('https://mv-video.xdplt.com/api/v1/config/ip')
+        .then(res => {
+          if(res && res.code === 200 && res.data){
+            let { province, city} = res.data.result
+            const blackList = ['北京', '上海', '深圳', '广州']
+            let location = city ? city : province
+            console.log(`ip province = ${province} , city = ${city} , so ${location}`);
+            this.isInCityBlackList = blackList.includes(location)
+            console.log(`ip black = ${this.isInCityBlackList}`);
+            rootStore.setIbuParams(this.isIBU, this.isInCityBlackList)
+          }
+        })
+        .catch(e => console.log(`ip error: ${e}`));
+    },
+    async onCreate() {
+      await PubSub.subscribe(rootStore.DO_INIT, ((msg) => {
+        this.onInitialize();
+        this.$def.initDone = true;
+        PubSub.publish(rootStore.INIT_DONE);
+      }).bind(this));
+    },
+    async onInitialize() {
+      console.info('\n\n\n\n**** 快应用已创建 ****');
+      await this.appSubscribe();
+      await this.getDeviceInfo();
+      await this.getAccessToken();
+      http.xhReport('https://xe.xdplt.com/adtrack', 'xh_alive', {});
+      (!this.isIBU && !this.farFromFirstStart) && this.questionIBU();
+      APP_STATISTICS.app_sta_init(this); // 统计打点
+      this.queryIp()
+    },
+    onDestroy() {
+      console.info('快应用已销毁');
+    },
+    onError(err) { //  监听应用错误的生命周期函数
+      console.log('\n\n应用 error');
+      console.error(err);
+      try {
+        APP_STATISTICS.on_err(err); // 错误统计打点代码
+      } catch (error) { }
+    }
+  }
 </script>

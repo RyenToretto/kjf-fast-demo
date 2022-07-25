@@ -7,7 +7,14 @@ const fs = require('fs')
 const path = require('path')
 const colors = require('colors')
 
-const newFolderName = process.argv[2]
+const pageName = process.argv[2]
+const badName = pageName.replace(/([A-Z])/g, '_$1')
+const newPageName = `Page${badName}`
+const newPagePath = `/${newPageName}`
+const newPageCom = `${badName.slice(1)}_page`.toLowerCase()
+
+const badClass = pageName.replace(/([A-Z])/g, '-$1')
+const newPageClass = `${badClass.slice(1)}-page`.toLowerCase()
 
 String.prototype.firstUpperCase = function() {
   return this.replace(/\b(\w)/g, $1 => {
@@ -25,14 +32,10 @@ const successExecPrint = msg => {
 function createNewPage(newFolderPath) {
   const mReg = new RegExp('@PAGE_CLASS_NAME', 'g')
   const pageContent = fs.readFileSync(`${__dirname}/template.ux`, 'UTF-8')
-  const rootClassName = newFolderName
-    .firstUpperCase()
-    .replace(/([A-Z])/g, '-$1')
-    .toLowerCase()
-  const newContent = pageContent.replace(mReg, rootClassName)
+  const newContent = pageContent.replace(mReg, newPageClass)
 
   fs.mkdirSync(newFolderPath, 0o777)
-  fs.writeFile(`${newFolderPath}/index.ux`, newContent, error => {
+  fs.writeFile(`${newFolderPath}/${newPageCom}.ux`, newContent, error => {
     if (error) throw `出错了 error: ${error}`
   })
   successExecPrint('创建新页面')
@@ -43,8 +46,9 @@ function saveRouter2Manifest() {
   let manifestConf = fs.readFileSync(manifestPath, 'UTF-8')
   manifestConf = JSON.parse(manifestConf)
   const routerPages = manifestConf.router.pages
-  routerPages[`pages/${newFolderName}`] = {
-    component: 'index'
+  routerPages[newPageName] = {
+    component: newPageCom,
+    path: newPagePath
   }
   manifestConf = JSON.stringify(manifestConf, null, 2)
   fs.writeFile(manifestPath, manifestConf, error => {
@@ -54,20 +58,20 @@ function saveRouter2Manifest() {
 }
 
 function main() {
-  if (!newFolderName) {
+  if (!pageName) {
     return console.warn(`⚠️  请输入要创建的新页面名称.`.underline.red)
   }
 
   const folderNameReg = /^[A-Z][[A-Za-z0-9]+$/
-  if (!folderNameReg.test(newFolderName)) {
-    return console.warn(`⚠️  请输入正确格式的文件夹名称. Eg: XyzAbcde.`.underline.red)
+  if (!folderNameReg.test(pageName)) {
+    return console.warn(`⚠️  请输入正确格式的文件夹名称. Eg: AaaBbb.`.underline.red)
   }
 
-  const newFolderPath = path.join(__dirname, `../../src/pages/${newFolderName}`)
+  const newFolderPath = path.join(__dirname, `../../src/${newPageName}`)
   const isExist = fs.existsSync(newFolderPath)
 
   if (isExist) {
-    return console.warn(`⚠️  在 /src/pages/ 中已存在 ${newFolderName} 的文件夹.`.underline.red)
+    return console.warn(`⚠️  在 /src/ 中已存在 ${newPageName} 的文件夹.`.underline.red)
   }
   createNewPage(newFolderPath)
   saveRouter2Manifest()

@@ -4,7 +4,7 @@ const utils = require('./utils.js')
 const shelljs = require('shelljs')
 
 /**
- * @desc：autoOpenBrowser 开启之后，会将二维码 Server 地址，在浏览器自动打开；
+ * @desc: autoOpenBrowser 开启之后，会将二维码 Server 地址，在浏览器自动打开；
  * @date: 2018-09-01
  */
 const autoOpenBrowser = true
@@ -28,7 +28,7 @@ const startServer = () => {
       printInfoAtTheTerminal(urls)
     })
     .catch(error => {
-      console.log(`${chalk.red('✘')} Opps, Something Error：\n`, error)
+      console.log(`${chalk.red('✘')} Opps, Something Error: \n`, error)
     })
 }
 

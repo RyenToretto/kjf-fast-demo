@@ -1,0 +1,157 @@
+<template>
+  <div class="banner-ad"></div>
+</template>
+
+<style lang="less">
+  .banner-ad {
+    width: 100%;
+  }
+</style>
+
+<script>
+  import ad from "@service.ad";
+  import prompt from '@system.prompt';
+
+  let bannerAd;
+  export default {
+    props: {
+      fixTop: {
+        type: [String, Number],
+        default: 52
+      },
+      moreFix: {
+        type: [String, Number],
+        default: 0
+      }
+    },
+    data: {
+      provider: "",
+      bannerAD: {
+        adIntervals: 30,
+        style: {
+          left: 0,
+          top: 100,
+          width: 360,
+          height: 57 // 57-普通Banner广告 或者 144-大型Banner广告
+        }
+      },
+      adPoor: [],
+      adType: '',
+      isShow: false,
+      isLoaded: false,
+      isInit: false,
+      isLoading: false
+    },
+    reLoadPoor() {
+      const { poorAd, utils } = this.$app.$def;
+      const { poorAdMap, AD_TYPE_BANNER, TEST_AD_MAP, isDev } = poorAd;
+      this.adType = AD_TYPE_BANNER;
+      this.adPoor = isDev
+        ? utils.deepClone(TEST_AD_MAP[AD_TYPE_BANNER])
+        : utils.deepClone(poorAdMap[AD_TYPE_BANNER]);
+    },
+    getAdBanner: function () {
+      this.isInit = true;
+      const rootEle = this.$element();
+      if (!rootEle) {
+        this.reLoadPoor();
+        this.showBannerAd()
+        return;
+      }
+      rootEle.getBoundingClientRect({
+        success: (pos) => {
+          this.bannerAD.style.top = pos.top + 23 + (+this.fixTop) + this.moreFix;
+          this.bannerAD.style.left = pos.left;
+          this.reLoadPoor();
+          this.showBannerAd();
+        },
+        fail: (e) => {
+          console.log(e);
+        }
+      })
+    },
+    showBannerAd: function () {
+      if (this.isLoading) {
+        return;
+      }
+      this.isLoading = true;
+      this.provider = ad.getProvider();
+      if (this.provider !== "huawei") {
+        prompt.showToast({
+          message: "当前设备不支持华为广告功能。",
+          duration: 2000,
+          gravity: "center"
+        });
+        this.isLoading = false;
+        return;
+      }
+      if (bannerAd) {
+        bannerAd.destroy();
+      }
+      this.isShow = false;
+      this.isLoaded = false;
+      const { poorAd } = this.$app.$def;
+      const adInfo = poorAd.getAdId(this.adPoor, this.adType);
+      bannerAd = ad.createBannerAd({
+        adUnitId: adInfo.adUnitId,
+        style: this.bannerAD.style,
+        adIntervals: this.bannerAD.adIntervals
+      });
+      bannerAd.onLoad(e => {
+        this.isShow = true;
+        this.isLoaded = true;
+        this.reLoadPoor();
+        console.info('Banner广告加载成功!!!!!!!!!!');
+        this.$emit('load', { msg: 'Banner广告加载成功!', height: this.bannerAD.style.height });
+        this.isLoading = false;
+        try {
+          const { poorAd } = this.$app.$def;
+          poorAd.arpuXHReport(this.adPoor);
+          poorAd.adXHReport();
+        } catch (e) {
+          console.log('banner adXHReport error: ', e);
+        }
+      });
+      bannerAd.onError(e => {
+        this.isLoading = false;
+        (+e.errCode !== 1004) && console.error("Banner广告 onError " + JSON.stringify(e, null, 4));
+        this.isShow = false;
+        this.isLoaded = false;
+        const { poorAd } = this.$app.$def;
+        const shouldContinue = poorAd.dealAdIdErr(this.adPoor, this.adType);
+        !poorAd.isDev && shouldContinue && this.showBannerAd();
+        if (!poorAd.isDev && !shouldContinue) {
+          this.$emit('close', { msg: 'Banner广告 onClose!', height: this.bannerAD.style.height });
+        }
+      });
+      bannerAd.onClose((e) => {
+        this.isLoading = false;
+        this.isShow = false;
+        this.isLoaded = false;
+        console.info("Banner广告 onClose e = ", e);
+        this.$emit('close', { msg: 'Banner广告 onClose!', height: this.bannerAD.style.height });
+      });
+      bannerAd.show();
+    },
+    hideAdBaner: function () {
+      if (bannerAd && this.isLoaded) {
+        bannerAd.hide();
+        this.isShow = false;
+      }
+      this.$emit('hide', { msg: 'Banner广告 hide!', height: this.bannerAD.style.height });
+    },
+    onDestroy() {
+      bannerAd && bannerAd.destroy();
+    },
+    showAdBaner: function () {
+      if (bannerAd && !this.isShow && this.isLoaded) {
+        bannerAd.show();
+        this.isShow = true;
+        this.$emit('load', { msg: 'Banner 显示', height: this.bannerAD.style.height });
+      }
+      if (!bannerAd || !this.isLoaded) {
+        this.isInit && this.showBannerAd();
+      }
+    }
+  };
+</script>

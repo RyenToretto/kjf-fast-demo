@@ -1,0 +1,150 @@
+<template>
+  <div class="ins-screen-ad"></div>
+</template>
+
+<style lang="less">
+  .ins-screen-ad {
+  }
+</style>
+
+<script>
+  import ad from "@service.ad";
+  import prompt from "@system.prompt";
+
+  let interstitialAd;
+  module.exports = {
+    props: {
+      isFast: {
+        type: Boolean,
+        default() {
+          return false
+        }
+      }
+    },
+    data: {
+      adPoor: [],
+      adType: '',
+      isAdReady: false,
+      autoShow: false,
+      isLoading: false
+    },
+    getReady() {
+      return this.isAdReady;
+    },
+    reLoadPoor() {
+      const { poorAd, utils } = this.$app.$def;
+      const { poorAdMap, AD_TYPE_INS, TEST_AD_MAP, isDev } = poorAd;
+      const poorArr = poorAdMap[AD_TYPE_INS];
+      this.adType = AD_TYPE_INS;
+      this.adPoor = isDev
+        ? utils.deepClone(TEST_AD_MAP[AD_TYPE_INS])
+        : utils.deepClone(this.isFast ? poorArr.slice(-4) : poorArr);
+    },
+    onReady() {
+      this.reLoadPoor();
+    },
+    onDestroy: function () {
+      if (interstitialAd) {
+        interstitialAd.destroy();
+        interstitialAd = null;
+        this.isAdReady = false;
+        this.autoShow = false;
+      }
+    },
+    show() {
+      if (this.isLoading) {
+        return;
+      }
+      this.isLoading = true;
+      if (interstitialAd) {
+        this.autoShow = true;
+        if (this.isAdReady) {
+          interstitialAd.show();
+          const { poorAd } = this.$app.$def;
+          poorAd.adXHReport();
+        }
+      } else {
+        this.reLoadPoor();
+        this.load(true);
+      }
+    },
+    load(showAfterLoad = false, isSelf = false) {
+      !isSelf && console.log('====== l o a d =====> showAfterLoad = ', showAfterLoad);
+      let provider = ad.getProvider();
+      if (provider !== "huawei") {
+        prompt.showToast({
+          message: "当前设备不支持华为广告功能。",
+          duration: 2000,
+          gravity: "center"
+        });
+        this.isLoading = false;
+        return;
+      }
+      if (interstitialAd) {
+        interstitialAd.destroy();
+        interstitialAd = null;
+        this.autoShow = false;
+      }
+      this.isAdReady = false;
+      const { poorAd } = this.$app.$def;
+      const adInfo = poorAd.getAdId(this.adPoor, this.adType);
+      interstitialAd = ad.createInterstitialAd({ adUnitId: adInfo.adUnitId });
+      interstitialAd.onLoad((data) => {
+        console.log(`插屏广告拉取成功 data= ${JSON.stringify(data, null, 4)}\n\n`);
+        this.isAdReady = true;
+        this.isLoading = false;
+        this.reLoadPoor();
+
+        this.$emit('ok', { msg: 'ins ad ok', realOk: true });
+        try {
+          const { poorAd } = this.$app.$def;
+          poorAd.arpuXHReport(this.adPoor);
+        } catch (e) {
+          console.log('ins ad arpu XHReport error: ', e);
+        }
+        if (showAfterLoad || this.autoShow) {
+          interstitialAd.show();
+          try {
+            const { poorAd } = this.$app.$def;
+            poorAd.adXHReport();
+          } catch (e) {
+            console.log('ins ad adXHReport error: ', e);
+          }
+        }
+      });
+      interstitialAd.onError(err => {
+        interstitialAd.destroy();
+        interstitialAd = null;
+        this.isAdReady = false;
+
+        const { poorAd } = this.$app.$def;
+        (+err.errCode !== 1004 || poorAd.isDev) && console.log(`插屏广告异常 error= ${JSON.stringify(err, null, 4)}`);
+        const shouldContinue = poorAd.dealAdIdErr(this.adPoor, this.adType);
+        !poorAd.isDev && shouldContinue && this.load(showAfterLoad, true);
+        if (poorAd.isDev || !shouldContinue) {
+          console.log('==== 插屏广告 拉取失败 ====>');
+          this.reLoadPoor();
+          this.autoShow = false;
+          this.isLoading = false;
+          this.$emit('close', { msg: 'ins ad onClose' });
+          // 0价 不再重新尝试
+        }
+      });
+      interstitialAd.onClose(() => {
+        console.log(`插屏广告已关闭`);
+        interstitialAd.destroy();
+        interstitialAd = null;
+        this.isAdReady = false;
+        this.reLoadPoor();
+        this.autoShow = false;
+        this.isLoading = false;
+        this.$emit('close', { msg: 'ins ad onClose' });
+        this.load();
+      });
+      interstitialAd.onClick(() => {
+        console.log(`插屏广告被点击`);
+      });
+      interstitialAd.load();
+    }
+  };
+</script>

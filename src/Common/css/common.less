@@ -1,0 +1,284 @@
+@import "./variable.less";
+
+/* *******重置********** */
+input,
+textarea {
+  placeholder-color: rgba(0, 0, 0, 0.4);
+  color: rgba(0, 0, 0, 0.9);
+}
+
+a,
+text,
+span {
+  color: @color-secondary;
+  font-family: @font-family-regular;
+}
+html,
+body {
+  font-family: @font-family-regular;
+}
+
+.textarea {
+  width: 100%;
+  height: 288px;
+  background-color: #fff;
+  padding: 19.2px 28.8px;
+  font-size: 31px;
+  border-radius: @radius-small;
+}
+
+/* video */
+.video {
+  width: 100%;
+  height: 345.6px;
+}
+
+/* swiper */
+.swiper {
+  indicator-selected-color: #fff;
+  indicator-color: rgba(0, 0, 0, 0.1);
+  indicator-size: 11.52px;
+  indicator-bottom: 31px;
+}
+
+/* slider */
+.slider {
+  color: rgba(0, 0, 0, 0.1);
+  selected-color: @color-blue-dark;
+  block-color: @color-blue-dark;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* *******基础样式********* */
+/* 页面容器 */
+.container {
+  flex-direction: column;
+  padding-bottom: 48px;
+}
+
+/* 背景色 */
+.bg-green {
+  background-color: @color-green;
+}
+.bg-blue {
+  background-color: @color-blue;
+}
+.bg-gray {
+  background-color: @color-gray;
+}
+.bg-red {
+  background-color: @color-red;
+}
+.bg-white {
+  background-color: #fff;
+}
+
+/* 字体色 */
+.color-white {
+  color: #fff;
+}
+.color-a {
+  color: @color-a;
+}
+.color-secondary {
+  color: @color-secondary;
+}
+.color-primary {
+  color: @color-primary;
+}
+.color-black {
+  color: #000000;
+}
+
+/* flex */
+
+/* 主轴居中 */
+.row-center {
+  justify-content: center;
+}
+
+/* 侧轴居中 */
+.column-center {
+  align-items: center;
+}
+
+/* flex direction */
+.fdir-column {
+  flex-direction: column;
+}
+
+/* margin */
+
+/* 按钮上下间距 */
+.mt-btn {
+  margin-top: 31px;
+}
+
+/* 案例上下间距 */
+.mt-item {
+  margin-top: 38.4px;
+}
+
+/* 页面两边留白距离 */
+.mlr-container {
+  margin-right: @left-right-gap;
+  margin-left: @left-right-gap;
+}
+
+/* font style */
+.under-line {
+  text-decoration: underline;
+}
+
+/* border */
+.divider-border-color {
+  border-color: @color-divider-border;
+}
+
+.border-bottom-1 {
+  border-bottom-width: 1px;
+}
+
+/* 其它 */
+.bro-l {
+  border-radius: @radius-big;
+}
+
+.bro-s {
+  border-radius: @radius-small;
+}
+
+/* padding */
+
+/* *******组件样式********* */
+
+/* 展示容器 */
+.item-container {
+  margin-left: @left-right-gap;
+  margin-right: @left-right-gap;
+  padding: 19.2px;
+  background-color: #fff;
+  border-radius: @radius-big;
+  flex-direction: column;
+}
+
+/* 示例标题 */
+.case-title {
+  margin-left: @left-right-gap;
+  margin-right: @left-right-gap;
+  margin-bottom: 19.2px;
+  flex-direction: column;
+}
+
+.case-title .title {
+  color: @color-secondary;
+  font-size: 27px;
+  font-weight: 500;
+}
+
+/* 信息展示容器 */
+.info-container {
+  margin-left: @left-right-gap;
+  margin-right: @left-right-gap;
+  padding-right: 19.2px;
+  padding-left: 19.2px;
+  background-color: #fff;
+  border-radius: @radius-big;
+  flex-direction: column;
+}
+
+.info-container .info-item {
+  height: 115.2px;
+  border-bottom-color: @color-divider-border;
+}
+
+.info-container .info-item .title {
+  flex-shrink: 0;
+  font-size: 31px;
+  color: @color-primary;
+}
+
+.info-container .info-item .result {
+  width: 100%;
+  justify-content: flex-end;
+  text-align: right;
+  color: #999;
+}
+
+/* 滚动列表 */
+.infinite-list-container {
+  margin-left: @left-right-gap;
+  margin-right: @left-right-gap;
+  flex-direction: column;
+}
+
+.infinite-list-container .list-item {
+  padding-top: 28.8px;
+  padding-bottom: 28.8px;
+  border-bottom-width: 1px;
+  border-bottom-color: @color-divider-border;
+  flex-direction: column;
+}
+
+.infinite-list-container .active-item {
+  background-color: #fff;
+}
+
+.infinite-list-container .title {
+  font-size: 32.64px;
+}
+
+.infinite-list-container .info-line {
+  height: 48px;
+}
+
+.infinite-list-container .info-line .info-title {
+  padding-right: 19.2px;
+}
+
+/* form */
+/* input */
+.input-big {
+  width: 100%;
+  background-color: #fff;
+  height: 96px;
+  border-radius: 48px;
+  padding-left: 28.8px;
+  font-size: 31px;
+}
+
+.radio {
+  width: 72px;
+}
+
+.checkbox {
+  width: 72px;
+}
+
+/**** 全局业务 class ****/
+.test-case-title {
+  margin: 38.4px 0 10px;
+  padding: 0 4px;
+  border-top: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+}
+.test-case-btn-group {
+  padding: 19.2px 0;
+  flex-direction: column;
+  align-items: center;
+  background-color: #4682b4;
+  .btn {
+    height: 80px;
+    background-color: #00bfff;
+    color: #ffffff;
+    border-radius: 19.2px;
+    width: 80%;
+  }
+  .with-mgn-top {
+    margin-top: 19.2px;
+  }
+  .btn:active {
+    background-color: #058fbd;
+  }
+}

@@ -1,6 +1,6 @@
 <template>
-  <div class="@PAGE_CLASS_NAME">
-    <div class="@PAGE_CLASS_NAME-wrapper">
+  <div class="about">
+    <div class="about-wrapper">
       <input class="button" type="button" value="模板按钮" />
     </div>
   </div>
@@ -38,12 +38,8 @@ export default {
 <style lang="less">
 @import "../Common/css/variable.less";
 
-.@PAGE_CLASS_NAME {
+.about {
   width: 100%;
   flex-direction: column;
-  .@PAGE_CLASS_NAME-wrapper {
-    width: 100%;
-    flex-direction: column;
-  }
 }
 </style>

@@ -1,0 +1,428 @@
+<template>
+  <div class="dialog-ask-ad-right-bg" style="left: {{ dialogAskAdRight ? 0 : 200000 }}px;">
+    <div class="dialog-ask-ad-right" style="left: {{ dialogAskAdRight ? 0 : 200000 }}px;" @click="doNothing">
+      <div class="close-dialog-logo">
+        <image src="/Common/img/close_icon.png"></image>
+      </div>
+
+      <div if="{{ !dialogAgain }}" class="dialog-ask-ad-right-body">
+        <div class="dialog-ask-ad-right-box">
+          <div class="dialog-ask-ad-right-line">
+            <div class="dialog-ask-ad-right-title"><text>声明与政策</text></div>
+          </div>
+
+          <div class="dialog-ask-ad-right-line">
+            <div class="dialog-ask-ad-right-text">
+              <text>
+                我们将严格遵循相关法律和隐私政策以保护您的个人信息。请您阅读并同意
+                <a @click="toProtocol">《用户协议》</a>
+                、
+                <a @click="toPrivacy">《隐私政策》</a>
+                。
+              </text>
+            </div>
+          </div>
+
+          <div class="dialog-ask-ad-right-line">
+            <div class="dialog-ask-ad-right-text with-top-20">
+              <text
+                >为给您提供更优质的服务，需要联网以及调用您的如下权限: </text
+              >
+            </div>
+          </div>
+
+          <div class="dialog-ask-ad-right-line">
+            <div class="dialog-ask-ad-right-name">
+              <text>获取手机信息权限: </text>
+            </div>
+          </div>
+
+          <div class="dialog-ask-ad-right-line">
+            <div class="dialog-ask-ad-right-des">
+              <text>用于获取设备标识以识别和区分不同用户，提供对应服务</text>
+            </div>
+          </div>
+
+          <div class="dialog-ask-ad-right-line">
+            <div class="dialog-ask-ad-right-name">
+              <text>读写手机存储权限: </text>
+            </div>
+          </div>
+
+          <div class="dialog-ask-ad-right-line">
+            <div class="dialog-ask-ad-right-des">
+              <text>用于实现存储设备信息</text>
+            </div>
+          </div>
+
+          <div class="dialog-ask-ad-right-line">
+            <div class="dialog-ask-ad-right-text with-top-20">
+              <text>如您同意，请点击下方按钮开始接受我们的服务: </text>
+            </div>
+          </div>
+        </div>
+
+        <div class="dialog-ask-ad-right-footer">
+          <div class="footer-btn" @click="switchDialogAgain(true)">
+            <text>不同意</text>
+          </div>
+          <div class="footer-btn active" @click="confirmAdRight">
+            <text>同意</text>
+          </div>
+        </div>
+      </div>
+
+      <div if="{{ dialogAgain }}" class="dialog-again-body">
+        <div class="dialog-again-box">
+          <div class="dialog-again-line">
+            <div class="dialog-again-title">
+              <text>同意声明和政策方可继续</text>
+            </div>
+          </div>
+
+          <div class="dialog-again-line">
+            <div class="dialog-again-text">
+              <text>您需要同意相关声明和政策，我们才能继续为您提供服务</text>
+            </div>
+          </div>
+        </div>
+
+        <div class="dialog-again-footer">
+          <div class="footer-btn" @click="refusedAdRight">
+            <text>退出应用</text>
+          </div>
+          <div class="footer-btn active" @click="switchDialogAgain(false)">
+            <text>再次查看</text>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style lang="less">
+.dialog-ask-ad-right-bg {
+  background-color: rgba(0, 0, 0, 0.4);
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 8;
+  .dialog-ask-ad-right {
+    width: 560px;
+    border-radius: 12px;
+    background-color: #ffffff;
+    align-items: center;
+    .close-dialog-logo {
+      display: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: rgba(0, 0, 0, 0.4);
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 9;
+      image {
+        width: 100%;
+        height: 100%;
+      }
+    }
+    .dialog-ask-ad-right-body {
+      padding-bottom: 166px;
+      width: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+      .dialog-ask-ad-right-box {
+        width: 100%;
+        flex: 1;
+        flex-direction: column;
+        align-items: center;
+        .dialog-ask-ad-right-line {
+          padding: 0 46px;
+          width: 100%;
+          .with-top-20 {
+            padding-top: 20px;
+          }
+          .dialog-ask-ad-right-title {
+            padding: 60px 0 40px;
+            width: 100%;
+            justify-content: center;
+            text {
+              line-height: 43px;
+              font-size: 38px;
+              color: rgba(0, 0, 0, 0.85);
+            }
+          }
+          .dialog-ask-ad-right-text {
+            width: 100%;
+            text {
+              line-height: 40px;
+              font-size: 28px;
+              color: rgba(0, 0, 0, 0.85);
+              a {
+                line-height: 40px;
+                font-size: 28px;
+                color: #4facf8;
+              }
+            }
+          }
+          .dialog-ask-ad-right-name {
+            padding-top: 20px;
+            width: 100%;
+            text {
+              line-height: 42px;
+              font-size: 30px;
+              color: rgba(0, 0, 0, 0.85);
+            }
+          }
+          .dialog-ask-ad-right-des {
+            padding-top: 4px;
+            width: 100%;
+            text {
+              line-height: 37px;
+              font-size: 26px;
+              color: rgba(0, 0, 0, 0.85);
+              opacity: 0.5;
+            }
+          }
+        }
+      }
+      .dialog-ask-ad-right-footer {
+        padding-top: 40px;
+        width: 100%;
+        height: 166px;
+        justify-content: center;
+        align-items: flex-start;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        .footer-btn {
+          width: 200px;
+          height: 76px;
+          border-radius: 44px;
+          border: 2px solid #404447;
+          justify-content: center;
+          align-items: center;
+          text {
+            line-height: 40px;
+            font-size: 28px;
+            color: #404447;
+          }
+        }
+        .active {
+          margin-left: 28px;
+          border-color: #4facf8;
+          background-color: #4facf8;
+          text {
+            color: #ffffff;
+          }
+        }
+      }
+    }
+    .dialog-again-body {
+      padding-bottom: 166px;
+      width: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+      .dialog-again-box {
+        width: 100%;
+        flex: 1;
+        flex-direction: column;
+        align-items: center;
+        .dialog-again-line {
+          padding: 0 46px;
+          width: 100%;
+          .with-top-20 {
+            padding-top: 20px;
+          }
+          .dialog-again-title {
+            padding: 60px 0 40px;
+            width: 100%;
+            justify-content: center;
+            text {
+              line-height: 43px;
+              font-size: 38px;
+              color: rgba(0, 0, 0, 0.85);
+            }
+          }
+          .dialog-again-text {
+            width: 100%;
+            text {
+              line-height: 40px;
+              font-size: 28px;
+              color: rgba(0, 0, 0, 0.85);
+              a {
+                line-height: 40px;
+                font-size: 28px;
+                color: #4facf8;
+              }
+            }
+          }
+        }
+      }
+      .dialog-again-footer {
+        padding-top: 40px;
+        width: 100%;
+        height: 166px;
+        justify-content: center;
+        align-items: flex-start;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        .footer-btn {
+          width: 200px;
+          height: 76px;
+          border-radius: 44px;
+          border: 2px solid #404447;
+          justify-content: center;
+          align-items: center;
+          text {
+            line-height: 40px;
+            font-size: 28px;
+            color: #404447;
+          }
+        }
+        .active {
+          margin-left: 28px;
+          border-color: #4facf8;
+          background-color: #4facf8;
+          text {
+            color: #ffffff;
+          }
+        }
+      }
+    }
+  }
+}
+</style>
+
+<script>
+import ad from "@service.ad";
+import prompt from "@system.prompt";
+import storage from "@system.storage";
+import router from '@system.router';
+
+export default {
+  data: {
+    AGREE_KEY: "agreeWithAd",
+    dialogAskAdRight: false,
+    dialogAgain: false,
+    provider: '',
+    adProviders: [],
+    allowAdNonPersonnal: 0,
+  },
+  show() {
+    this.dialogAskAdRight = true;
+    return true;
+  },
+  closeDialogAskAdRight() {
+    this.dialogAskAdRight = false;
+  },
+  toProtocol() {
+    const { linkProtocol } = this.$app.$def;
+    router.push({ uri: linkProtocol });
+  },
+  toPrivacy() {
+    const { linkPrivacy } = this.$app.$def;
+    router.push({ uri: linkPrivacy });
+  },
+  doNothing(e) {
+    try {
+      e && e.stopPropagation && e.stopPropagation();
+    } catch (e) {
+    }
+  },
+  onReady(options) {
+    var that = this;
+    this.provider = ad.getProvider(); // 获取设备厂商
+    if (this.provider !== "huawei") {
+      this.checkShowConsentDialog({});
+      return;
+    }
+    // 首次启动快应用时，检查是否需要弹窗征得用户同意.
+    // true 表示用户未达到同意年龄，不能请求个性化广告。 在这种情况下，调用 requestConsentUpdate 时回调总是会失败，并且不需要弹窗.
+    // 当需要用户同意时，调用 ad.setUnderAgeOfPromise(false).
+    ad.setUnderAgeOfPromise && ad.setUnderAgeOfPromise(false);
+    ad.requestConsentUpdate && ad.requestConsentUpdate({ // 更新用户意见状态
+      success: function (data) { // 广告技术提供商等信息
+        // 确保每次访问代码演示时都会显示一个对话框。 一般情况下不需要添加代码。
+        that.checkShowConsentDialog(data);
+
+        if (data.isNeedConsent) { // 如果值为true，则用户在EEA或其他敏感区域，必须征得用户同意。
+          if (data.consentStatus === 2) {
+            // 显示一个弹出窗口以获取用户同意并调用 ad.setConsentStatus 设置用户同意。 如果弹出窗口已显示，则无需再次显示。
+            that.checkShowConsentDialog(data);
+          } else {
+            // 可以请求个性化广告。
+            that.allowAdNonPersonnal = 0;
+          }
+        } else { // 如果为 false，则可以通过 HUAWEI Ads SDK 请求个性化广告。
+          // 可以请求个性化广告。
+          that.allowAdNonPersonnal = 0;
+        }
+      },
+      fail: function (err) {
+        // 失败时回调。可以请求非个性化广告。
+        console.log("更新用户意见状态 失败 err = " + JSON.stringify(err, null, 4));
+        that.allowAdNonPersonnal = 1;
+      },
+      complete: function () { }
+    });
+  },
+  checkShowConsentDialog: function (data) {
+    // this.adproviders = data.AdProviderList;
+    var that = this;
+    storage.get({
+      key: this.AGREE_KEY,
+      success: function (allow) {
+        if (allow !== "" && +allow !== 1) {
+          that.allowAdNonPersonnal = allow;
+          that.$emit('confirm', { msg: 'to ask-ad-right book' });
+        } else {
+          that.show();
+        }
+      },
+      fail: function (data, code) {
+        that.show();
+      }
+    });
+  },
+  confirmAdRight: function () {
+    this.updateConsentStatus(0); // 0: 用户同意接收个性化和非个性化广告。
+    this.closeDialogAskAdRight();
+    this.$emit('confirm', { msg: 'to ask-ad-right book' });
+  },
+  switchDialogAgain(isOpen = false) {
+    this.dialogAgain = isOpen;
+  },
+  refusedAdRight() {
+    // 1 (NON_PERSONALIZED): 用户已同意仅接收非个性化广告。 如果用户未选择同意选项，则只能请求非个性化广告.
+    // 2 (UNKNOWN): 用户既不同意也不拒绝接收个性化或非个性化广告.
+    // this.updateConsentStatus(1);
+    this.closeDialogAskAdRight();
+    router.back();
+  },
+  saveContentStatus: function (consentStatus) {
+    storage.set({
+      key: this.AGREE_KEY,
+      value: consentStatus,
+      success: function (data) {
+      },
+      fail: function (data, code) {
+        console.log("保存同意状态失败, code = " + code);
+      }
+    });
+  },
+  updateConsentStatus: function (consentStatus) {
+    this.allowAdNonPersonnal = consentStatus;
+    ad.setConsentStatus && ad.setConsentStatus(consentStatus); // 设置用户同意状态.
+    this.saveContentStatus(consentStatus); // 保存用户同意状态
+  }
+}
+</script>
