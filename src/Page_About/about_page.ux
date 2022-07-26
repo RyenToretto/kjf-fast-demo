@@ -1,5 +1,7 @@
 <template>
   <div class="about">
+    <div class="about-header"></div>
+
     <div class="about-wrapper">
       <input class="button" type="button" value="模板按钮" />
     </div>
@@ -41,5 +43,13 @@ export default {
 .about {
   width: 100%;
   flex-direction: column;
+  .about-header {
+    padding: 100px 0 0;
+    background-color: #faebd7;
+  }
+  .about-wrapper {
+    padding: 24px;
+    flex-direction: column;
+  }
 }
 </style>

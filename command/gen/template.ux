@@ -1,5 +1,7 @@
 <template>
   <div class="@PAGE_CLASS_NAME">
+    <div class="@PAGE_CLASS_NAME-header"></div>
+
     <div class="@PAGE_CLASS_NAME-wrapper">
       <input class="button" type="button" value="模板按钮" />
     </div>
@@ -31,7 +33,7 @@ export default {
     APP_STATISTICS.page_hide(this)
   },
 
-  /* -------------------SelfCustomEvent------------------ */
+  /* ------------------- SelfCustomEvent ------------------ */
 }
 </script>
 
@@ -41,6 +43,10 @@ export default {
 .@PAGE_CLASS_NAME {
   width: 100%;
   flex-direction: column;
+  .@PAGE_CLASS_NAME-header {
+    padding: 100px 0 0;
+    background-color: #faebd7;
+  }
   .@PAGE_CLASS_NAME-wrapper {
     width: 100%;
     flex-direction: column;
